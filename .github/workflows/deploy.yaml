@@ -1,11 +1,11 @@
-name: Build & Deploy Frontend
+name: Build & Deploy Backend
 
 on:
   push:
     branches: [main]
 
 env:
-  IMAGE: comnarin/frontend
+  IMAGE: comnarin/kpi_backend
 
 jobs:
   build-and-push:
@@ -41,7 +41,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             # Write .env file from GitHub Secrets
-            cat > /opt/kpi-app/.env << 'EOF'
+            cat > /opt/kpi/.env << 'EOF'
             POSTGRES_USER=${{ secrets.POSTGRES_USER }}
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             POSTGRES_DB=${{ secrets.POSTGRES_DB }}
@@ -51,8 +51,8 @@ jobs:
             EOF
 
             # Deploy
-            cd /opt/kpi-app
-            docker compose pull frontend
-            docker compose up -d frontend
+            cd /opt/kpi
+            docker compose pull backend
+            docker compose up -d backend
             docker image prune -f
-            echo "Frontend deployed at $(date)"
+            echo "Backend deployed at $(date)"
