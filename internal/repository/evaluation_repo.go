@@ -23,9 +23,13 @@ func (r *evaluationRepository) List(ctx context.Context, filter domain.Evaluatio
 	var results []domain.EvaluationResult
 	query := r.db.WithContext(ctx).Where("evaluation_results.tenant_id = ?", filter.TenantID)
 
-	if filter.ViewerRole == string(domain.RoleEmployee) {
+	if filter.ViewerRole == string(domain.RoleSuperAdmin) || filter.ViewerRole == string(domain.RoleCEO) {
+		// CEO and SuperAdmin see all evaluations
+	} else if filter.ViewerRole == string(domain.RoleEmployee) {
+		// Employees see evaluations where they are the subject
 		query = query.Where("evaluation_results.employee_id = ?", filter.SubjectEmployeeID)
-	} else if filter.ViewerRole != string(domain.RoleSuperAdmin) && filter.ViewerRole != string(domain.RoleCEO) && filter.ViewerRole != string(domain.RoleHR) {
+	} else {
+		// HR, Head of Dept, and others see ONLY evaluations they performed
 		query = query.Where("evaluation_results.evaluator_id = ?", filter.ViewerID)
 	}
 
