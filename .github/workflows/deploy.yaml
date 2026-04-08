@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  IMAGE: comnarin/kpi_backend
+  IMAGE: narincom/kpi_backend
 
 jobs:
   build-and-push:
