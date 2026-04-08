@@ -46,7 +46,22 @@ func (r *tenantRepository) Update(ctx context.Context, tenant *domain.Tenant) er
 }
 
 func (r *tenantRepository) Delete(ctx context.Context, id string) error {
-	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&domain.Tenant{}).Error
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// Delete all dependent records
+		if err := tx.Where("tenant_id = ?", id).Delete(&domain.EvaluationResult{}).Error; err != nil { return err }
+		if err := tx.Where("tenant_id = ?", id).Delete(&domain.EvaluationTemplate{}).Error; err != nil { return err }
+		if err := tx.Where("tenant_id = ?", id).Delete(&domain.SalaryAdjustment{}).Error; err != nil { return err }
+		if err := tx.Where("tenant_id = ?", id).Delete(&domain.SalaryFormula{}).Error; err != nil { return err }
+		if err := tx.Where("tenant_id = ?", id).Delete(&domain.Employee{}).Error; err != nil { return err }
+		if err := tx.Where("tenant_id = ?", id).Delete(&domain.User{}).Error; err != nil { return err }
+		if err := tx.Where("tenant_id = ?", id).Delete(&domain.Department{}).Error; err != nil { return err }
+		if err := tx.Where("tenant_id = ?", id).Delete(&domain.EvaluationPeriod{}).Error; err != nil { return err }
+		if err := tx.Where("tenant_id = ?", id).Delete(&domain.RolePermission{}).Error; err != nil { return err }
+		if err := tx.Where("tenant_id = ?", id).Delete(&domain.TenantConfig{}).Error; err != nil { return err }
+		
+		// Finally delete the tenant
+		return tx.Where("id = ?", id).Delete(&domain.Tenant{}).Error
+	})
 }
 
 func (r *tenantRepository) GetConfig(ctx context.Context, tenantID string) (*domain.TenantConfig, error) {

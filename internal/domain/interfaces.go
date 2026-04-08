@@ -91,8 +91,9 @@ type TenantUseCase interface {
 	CreateTenant(ctx context.Context, tenant Tenant, adminEmail, adminPassword, adminName string) (*Tenant, error)
 	GetTenant(ctx context.Context, id string) (*Tenant, error)
 	ListTenants(ctx context.Context) ([]Tenant, error)
-	UpdateTenant(ctx context.Context, id string, name, code, size string, isActive bool) (*Tenant, error)
+	UpdateTenant(ctx context.Context, id string, name, code, size string, maxUsers int, isActive bool) (*Tenant, error)
 	DeleteTenant(ctx context.Context, id string) error
+	GetTenantConfig(ctx context.Context, tenantID string) (*TenantConfig, error)
 	UpdateTenantConfig(ctx context.Context, tenantID string, config TenantConfig) (*TenantConfig, error)
 	// Period management
 	GetActivePeriod(ctx context.Context, tenantID string) (*EvaluationPeriod, error)

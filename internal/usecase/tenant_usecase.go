@@ -63,7 +63,7 @@ func (u *tenantUseCase) ListTenants(ctx context.Context) ([]domain.Tenant, error
 	return u.tenantRepo.List(ctx)
 }
 
-func (u *tenantUseCase) UpdateTenant(ctx context.Context, id string, name, code, size string, isActive bool) (*domain.Tenant, error) {
+func (u *tenantUseCase) UpdateTenant(ctx context.Context, id string, name, code, size string, maxUsers int, isActive bool) (*domain.Tenant, error) {
 	tenant, err := u.tenantRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, domain.ErrNotFound
@@ -71,6 +71,7 @@ func (u *tenantUseCase) UpdateTenant(ctx context.Context, id string, name, code,
 	tenant.Name = name
 	tenant.Code = code
 	tenant.Size = size
+	tenant.MaxUsers = maxUsers
 	tenant.IsActive = isActive
 
 	if err := u.tenantRepo.Update(ctx, tenant); err != nil {
@@ -83,6 +84,10 @@ func (u *tenantUseCase) DeleteTenant(ctx context.Context, id string) error {
 	// Add business logic to check if tenant can be deleted, e.g. wiping associated data
 	// For now we just delete the tenant record
 	return u.tenantRepo.Delete(ctx, id)
+}
+
+func (u *tenantUseCase) GetTenantConfig(ctx context.Context, tenantID string) (*domain.TenantConfig, error) {
+	return u.tenantRepo.GetConfig(ctx, tenantID)
 }
 
 func (u *tenantUseCase) UpdateTenantConfig(ctx context.Context, tenantID string, config domain.TenantConfig) (*domain.TenantConfig, error) {

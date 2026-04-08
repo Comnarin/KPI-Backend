@@ -77,7 +77,8 @@ func RegisterRoutes(app *fiber.App, handlers *handler.Handlers) {
 	protected.Get("/admin/tenants/:id", handlers.Admin.GetTenant)
 	protected.Put("/admin/tenants/:id", handlers.Admin.UpdateTenant)
 	protected.Delete("/admin/tenants/:id", handlers.Admin.DeleteTenant)
-	protected.Get("/admin/tenants/:id/config", handlers.Admin.UpdateTenantConfig)
+	protected.Get("/admin/tenants/:id/config", handlers.Admin.GetTenantConfig)
+	protected.Put("/admin/tenants/:id/config", handlers.Admin.UpdateTenantConfig)
 	protected.Get("/admin/tenants/:id/permissions", handlers.Permissions.GetByTenantParam)
 	protected.Put("/admin/tenants/:id/permissions", handlers.Permissions.UpdateByTenantParam)
 }

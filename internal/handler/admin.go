@@ -98,7 +98,7 @@ func (h *AdminHandler) UpdateTenant(c *fiber.Ctx) error {
 	if err := c.BodyParser(&body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
 	}
-	tenant, err := h.tenantUC.UpdateTenant(c.Context(), id, body.Name, body.Code, body.Size, body.IsActive)
+	tenant, err := h.tenantUC.UpdateTenant(c.Context(), id, body.Name, body.Code, body.Size, body.MaxUsers, body.IsActive)
 	if err != nil {
 		if err == domain.ErrNotFound {
 			return fiber.NewError(fiber.StatusNotFound, "tenant not found")
@@ -123,6 +123,18 @@ type updateTenantConfigAdminReq struct {
 	EnableHREval       bool `json:"enableHrEval"`
 	EnableDeptHeadEval bool `json:"enableDeptHeadEval"`
 	EnableCEOEval      bool `json:"enableCeoEval"`
+}
+
+func (h *AdminHandler) GetTenantConfig(c *fiber.Ctx) error {
+	if !requireSuperAdmin(c) {
+		return fiber.NewError(fiber.StatusForbidden, "superadmin only")
+	}
+	id := c.Params("id")
+	result, err := h.tenantUC.GetTenantConfig(c.Context(), id)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(result)
 }
 
 func (h *AdminHandler) UpdateTenantConfig(c *fiber.Ctx) error {
