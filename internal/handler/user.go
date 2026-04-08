@@ -114,3 +114,30 @@ func (h *UserHandler) Delete(c *fiber.Ctx) error {
 	}
 	return c.SendStatus(fiber.StatusNoContent)
 }
+
+type changePasswordRequest struct {
+	Password string `json:"password"`
+}
+
+func (h *UserHandler) ChangePassword(c *fiber.Ctx) error {
+	userID, _ := c.Locals("userId").(string)
+	tenantID := tenantFromCtx(c)
+
+	var body changePasswordRequest
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
+	}
+
+	if body.Password == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "password is required")
+	}
+
+	if err := h.userUC.ChangePassword(c.Context(), userID, tenantID, body.Password); err != nil {
+		if err == domain.ErrNotFound {
+			return fiber.NewError(fiber.StatusNotFound, "user not found")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(fiber.Map{"message": "password updated successfully"})
+}

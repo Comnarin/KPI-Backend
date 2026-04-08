@@ -31,7 +31,7 @@ func main() {
 	})
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://159.65.7.0",
+		AllowOrigins:     "http://localhost:3000, http://159.65.7.0, http://kpi-pnc.online, http://www.kpi-pnc.online",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		AllowMethods:     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
 		AllowCredentials: true,

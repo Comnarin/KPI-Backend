@@ -71,3 +71,15 @@ func (u *userUseCase) UpdateUser(ctx context.Context, id, tenantID, fullName, ro
 func (u *userUseCase) DeleteUser(ctx context.Context, id, tenantID string) error {
 	return u.userRepo.Delete(ctx, id, tenantID)
 }
+
+func (u *userUseCase) ChangePassword(ctx context.Context, userID, tenantID, newPassword string) error {
+	user, err := u.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return domain.ErrNotFound
+	}
+	if user.TenantID != tenantID {
+		return domain.ErrNotFound
+	}
+	user.Password = newPassword
+	return u.userRepo.Update(ctx, user)
+}

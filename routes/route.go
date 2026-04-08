@@ -25,6 +25,7 @@ func RegisterRoutes(app *fiber.App, handlers *handler.Handlers) {
 	// Users (accounts with system access)
 	protected.Get("/users", handlers.User.List)
 	protected.Post("/users", handlers.User.Create)
+	protected.Put("/users/change-password", handlers.User.ChangePassword)
 	protected.Put("/users/:id", handlers.User.Update)
 	protected.Delete("/users/:id", handlers.User.Delete)
 

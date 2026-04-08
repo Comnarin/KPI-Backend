@@ -162,4 +162,5 @@ type UserUseCase interface {
 	CreateUser(ctx context.Context, req User) (*User, error)
 	UpdateUser(ctx context.Context, id, tenantID, fullName, role, departmentID string) (*User, error)
 	DeleteUser(ctx context.Context, id, tenantID string) error
+	ChangePassword(ctx context.Context, userID, tenantID, newPassword string) error
 }

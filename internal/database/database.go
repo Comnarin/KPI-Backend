@@ -75,7 +75,7 @@ func seedData(db *gorm.DB) error {
 		admin = domain.User{
 			TenantID: systemTenant.ID,
 			Email:    "admin@kpi.com",
-			Password: "admin123", // Using plain-text as per auth_usecase setup
+			Password: "password",
 			FullName: "System Administrator",
 			Role:     domain.RoleSuperAdmin,
 		}
