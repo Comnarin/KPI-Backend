@@ -59,7 +59,7 @@ func (u *evaluationUseCase) CreateEvaluation(ctx context.Context, tenantID strin
 	}
 
 	// 4. Department validation (แม่แบบ)
-	if tpl.Department != "All" && emp.Department != tpl.Department {
+	if tpl.DepartmentID != "" && emp.DepartmentID != tpl.DepartmentID {
 		return nil, fiber.NewError(fiber.StatusBadRequest, "Employee department does not match template department")
 	}
 

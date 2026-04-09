@@ -23,9 +23,9 @@ func (h *EvaluationHandler) List(c *fiber.Ctx) error {
 		TenantID:    tenantID,
 		ViewerID:    userID,
 		ViewerRole:  role,
-		SearchQuery: c.Query("q"),
-		Department:  c.Query("department"),
-		Period:      c.Query("period"),
+		SearchQuery:  c.Query("q"),
+		DepartmentID: c.Query("departmentId"),
+		Period:       c.Query("period"),
 	}
 
 	results, err := h.evalUC.ListEvaluations(c.Context(), filter)

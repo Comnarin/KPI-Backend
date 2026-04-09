@@ -17,7 +17,13 @@ func NewTemplateRepository(db *gorm.DB) domain.TemplateRepository {
 
 func (r *templateRepository) List(ctx context.Context, filter domain.TemplateFilter) ([]domain.EvaluationTemplate, error) {
 	var templates []domain.EvaluationTemplate
-	query := r.db.WithContext(ctx).Where("tenant_id = ?", filter.TenantID)
+	query := r.db.WithContext(ctx).
+		Preload("Department").
+		Where("tenant_id = ?", filter.TenantID)
+
+	if filter.DepartmentID != "" {
+		query = query.Where("department_id = ?", filter.DepartmentID)
+	}
 
 	if filter.SearchQuery != "" {
 		q := "%" + filter.SearchQuery + "%"

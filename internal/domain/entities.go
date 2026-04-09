@@ -152,38 +152,41 @@ type EmployeeFilter struct {
 	SearchQuery            string
 	ExcludeEvaluatedPeriod string
 	EvaluatorID            string
+	DepartmentID           string
 }
 
 type Employee struct {
-
-	ID               string    `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
-	TenantID         string    `gorm:"index;not null" json:"tenantId"`
-	Code             string    `gorm:"size:64;not null" json:"code"`
-	FirstName        string    `gorm:"size:128;not null" json:"firstName"`
-	LastName         string    `gorm:"size:128;not null" json:"lastName"`
-	Email            string    `gorm:"size:128;default:''" json:"email"`
-	Department       string    `gorm:"size:128;not null" json:"department"`
-	Position         string    `gorm:"size:128;not null" json:"position"`
-	BaseSalary       float64   `gorm:"not null" json:"baseSalary"`
-	PersonalCapacity float64   `gorm:"default:0" json:"personalCapacity"`
-	VariablePayBase  float64   `gorm:"default:0" json:"variablePayBase"`
-	YearsOfService   int       `gorm:"default:0" json:"yearsOfService"`
-	Status           string    `gorm:"size:32;default:'ACTIVE'" json:"status"`
-	StartDate        string    `gorm:"size:32" json:"startDate"`
-	CreatedAt        time.Time `json:"createdAt"`
-	UpdatedAt        time.Time `json:"updatedAt"`
+	ID               string      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
+	TenantID         string      `gorm:"index;not null" json:"tenantId"`
+	Code             string      `gorm:"size:64;not null" json:"code"`
+	FirstName        string      `gorm:"size:128;not null" json:"firstName"`
+	LastName         string      `gorm:"size:128;not null" json:"lastName"`
+	Email            string      `gorm:"size:128;default:''" json:"email"`
+	DepartmentID     string      `gorm:"type:uuid;index" json:"departmentId"`
+	Department       *Department `gorm:"foreignKey:DepartmentID" json:"department,omitempty"`
+	Position         string      `gorm:"size:128;not null" json:"position"`
+	BaseSalary       float64     `gorm:"not null" json:"baseSalary"`
+	PersonalCapacity float64     `gorm:"default:0" json:"personalCapacity"`
+	VariablePayBase  float64     `gorm:"default:0" json:"variablePayBase"`
+	YearsOfService   int         `gorm:"default:0" json:"yearsOfService"`
+	Status           string      `gorm:"size:32;default:'ACTIVE'" json:"status"`
+	StartDate        string      `gorm:"size:32" json:"startDate"`
+	CreatedAt        time.Time   `json:"createdAt"`
+	UpdatedAt        time.Time   `json:"updatedAt"`
 }
 
 type TemplateFilter struct {
-	TenantID    string
-	SearchQuery string
+	TenantID     string
+	SearchQuery  string
+	DepartmentID string
 }
 
 type EvaluationTemplate struct {
 	ID           string         `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
 	TenantID     string         `gorm:"index;not null" json:"tenantId"`
 	Name         string         `gorm:"not null" json:"name"`
-	Department   string         `gorm:"size:128;not null" json:"department"`
+	DepartmentID string         `gorm:"type:uuid;index" json:"departmentId"`
+	Department   *Department    `gorm:"foreignKey:DepartmentID" json:"department,omitempty"`
 	Visibility   string         `gorm:"size:32;default:'GENERAL'" json:"visibility"` // PERSONAL | GENERAL
 	Period       string         `gorm:"size:64;default:'รายไตรมาส'" json:"period"`
 	Definition   datatypes.JSON `gorm:"type:jsonb" json:"definition"`
@@ -206,9 +209,8 @@ type EvaluationFilter struct {
 	ViewerRole        string
 	SubjectEmployeeID string
 	DepartmentID      string
-	SearchQuery  string
-	Department   string
-	Period       string
+	SearchQuery       string
+	Period            string
 }
 
 type EvaluationResult struct {

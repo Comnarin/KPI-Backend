@@ -17,25 +17,32 @@ func NewEmployeeRepository(db *gorm.DB) domain.EmployeeRepository {
 
 func (r *employeeRepository) List(ctx context.Context, filter domain.EmployeeFilter) ([]domain.Employee, error) {
 	var results []domain.Employee
-	query := r.db.WithContext(ctx).Where("tenant_id = ?", filter.TenantID)
+	query := r.db.WithContext(ctx).
+		Preload("Department").
+		Where("employees.tenant_id = ?", filter.TenantID)
 	
 	if filter.Status != "" {
-		query = query.Where("status = ?", filter.Status)
+		query = query.Where("employees.status = ?", filter.Status)
+	}
+
+	if filter.DepartmentID != "" {
+		query = query.Where("employees.department_id = ?", filter.DepartmentID)
 	}
 
 	if filter.SearchQuery != "" {
 		q := "%" + filter.SearchQuery + "%"
-		query = query.Where("first_name ILIKE ? OR last_name ILIKE ? OR code ILIKE ? OR department ILIKE ?", q, q, q, q)
+		query = query.Joins("LEFT JOIN departments ON departments.id = employees.department_id").
+			Where("employees.first_name ILIKE ? OR employees.last_name ILIKE ? OR employees.code ILIKE ? OR departments.name ILIKE ?", q, q, q, q)
 	}
 
 	if filter.ExcludeEvaluatedPeriod != "" && filter.EvaluatorID != "" {
 		subQuery := r.db.Model(&domain.EvaluationResult{}).
 			Select("employee_id").
 			Where("period = ? AND evaluator_id = ?", filter.ExcludeEvaluatedPeriod, filter.EvaluatorID)
-		query = query.Where("id NOT IN (?)", subQuery)
+		query = query.Where("employees.id NOT IN (?)", subQuery)
 	}
 
-	err := query.Order("code").Find(&results).Error
+	err := query.Order("employees.code").Find(&results).Error
 	return results, err
 }
 

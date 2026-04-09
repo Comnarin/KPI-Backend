@@ -66,44 +66,7 @@ func (h *SeedHandler) Seed(c *fiber.Ctx) error {
 		{TenantID: tenantID, Name: "ฝ่ายการเงิน", Code: "FINANCE", Description: "ทีมการเงินและบัญชี"},
 	}
 
-	employees := []domain.Employee{
-		{
-			TenantID: tenantID, Code: "EMP001",
-			FirstName: "สมชาย", LastName: "ทดลอง",
-			Department: "ฝ่ายขาย", Position: "Sales Rep",
-			BaseSalary: 30000, PersonalCapacity: 2000, VariablePayBase: 5000,
-			YearsOfService: 3, StartDate: "2021-01-15",
-		},
-		{
-			TenantID: tenantID, Code: "EMP002",
-			FirstName: "สมหญิง", LastName: "ทดสอบ",
-			Department: "ฝ่ายพัฒนาซอฟต์แวร์", Position: "Developer",
-			BaseSalary: 40000, PersonalCapacity: 5000, VariablePayBase: 8000,
-			YearsOfService: 5, StartDate: "2019-06-20",
-		},
-		{
-			TenantID: tenantID, Code: "EMP003",
-			FirstName: "มานี", LastName: "รักงาน",
-			Department: "ฝ่ายทรัพยากรบุคคล", Position: "HR Officer",
-			BaseSalary: 28000, PersonalCapacity: 1500, VariablePayBase: 3000,
-			YearsOfService: 2, StartDate: "2022-03-01",
-		},
-	}
 
-	templates := []domain.EvaluationTemplate{
-		{
-			TenantID: tenantID, Name: "แบบประเมินทีมพัฒนาซอฟต์แวร์",
-			Department: "ฝ่ายพัฒนาซอฟต์แวร์", Period: "รายไตรมาส",
-			Definition: datatypes.JSON([]byte(`[{"id":"k1","name":"อัตราการทำงานเสร็จใน Sprint","weight":30,"targetValue":100,"unit":"%"},{"id":"k2","name":"คุณภาพโค้ด (Bug Rate)","weight":25,"targetValue":2,"unit":"บั๊ก/ฟีเจอร์"},{"id":"k3","name":"การส่งงานตรงเวลา","weight":20,"targetValue":95,"unit":"%"},{"id":"k4","name":"การ Review Code","weight":15,"targetValue":100,"unit":"%"},{"id":"k5","name":"คุณภาพเอกสาร","weight":10,"targetValue":5,"unit":"คะแนน"}]`)),
-			CreatedByID: user.ID,
-		},
-		{
-			TenantID: tenantID, Name: "แบบประเมินทีมขาย",
-			Department: "ฝ่ายขาย", Period: "รายไตรมาส",
-			Definition: datatypes.JSON([]byte(`[{"id":"k1","name":"ยอดขายรายไตรมาส","weight":35,"targetValue":3000000,"unit":"บาท"},{"id":"k2","name":"อัตราการรักษาลูกค้า","weight":25,"targetValue":90,"unit":"%"},{"id":"k3","name":"จำนวนลูกค้าใหม่","weight":20,"targetValue":20,"unit":"ราย"},{"id":"k4","name":"ความพึงพอใจลูกค้า","weight":10,"targetValue":90,"unit":"%"},{"id":"k5","name":"การทำงานเป็นทีม","weight":10,"targetValue":5,"unit":"คะแนน"}]`)),
-			CreatedByID: user.ID,
-		},
-	}
 
 	// Default salary formula
 	meritMap, _ := json.Marshal(map[string]int{
@@ -159,14 +122,41 @@ func (h *SeedHandler) Seed(c *fiber.Ctx) error {
 		}
 
 		// Create departments
+		deptMap := make(map[string]string)
 		for i := range departments {
 			departments[i].TenantID = tenant.ID
 		}
 		if err := tx.Create(&departments).Error; err != nil {
 			return err
 		}
+		for _, d := range departments {
+			deptMap[d.Name] = d.ID
+		}
 
 		// Create employees
+		employees := []domain.Employee{
+			{
+				TenantID: tenantID, Code: "EMP001",
+				FirstName: "สมชาย", LastName: "ทดลอง",
+				DepartmentID: deptMap["ฝ่ายขาย"], Position: "Sales Rep",
+				BaseSalary: 30000, PersonalCapacity: 2000, VariablePayBase: 5000,
+				YearsOfService: 3, StartDate: "2021-01-15",
+			},
+			{
+				TenantID: tenantID, Code: "EMP002",
+				FirstName: "สมหญิง", LastName: "ทดสอบ",
+				DepartmentID: deptMap["ฝ่ายพัฒนาซอฟต์แวร์"], Position: "Developer",
+				BaseSalary: 40000, PersonalCapacity: 5000, VariablePayBase: 8000,
+				YearsOfService: 5, StartDate: "2019-06-20",
+			},
+			{
+				TenantID: tenantID, Code: "EMP003",
+				FirstName: "มานี", LastName: "รักงาน",
+				DepartmentID: deptMap["ฝ่ายทรัพยากรบุคคล"], Position: "HR Officer",
+				BaseSalary: 28000, PersonalCapacity: 1500, VariablePayBase: 3000,
+				YearsOfService: 2, StartDate: "2022-03-01",
+			},
+		}
 		for i := range employees {
 			employees[i].TenantID = tenant.ID
 		}
@@ -174,7 +164,21 @@ func (h *SeedHandler) Seed(c *fiber.Ctx) error {
 			return err
 		}
 
-		// Create templates (use user.ID now that it exists)
+		// Create templates
+		templates := []domain.EvaluationTemplate{
+			{
+				TenantID: tenantID, Name: "แบบประเมินทีมพัฒนาซอฟต์แวร์",
+				DepartmentID: deptMap["ฝ่ายพัฒนาซอฟต์แวร์"], Period: "รายไตรมาส",
+				Definition: datatypes.JSON([]byte(`[{"id":"k1","name":"อัตราการทำงานเสร็จใน Sprint","weight":30,"targetValue":100,"unit":"%"},{"id":"k2","name":"คุณภาพโค้ด (Bug Rate)","weight":25,"targetValue":2,"unit":"บั๊ก/ฟีเจอร์"},{"id":"k3","name":"การส่งงานตรงเวลา","weight":20,"targetValue":95,"unit":"%"},{"id":"k4","name":"การ Review Code","weight":15,"targetValue":100,"unit":"%"},{"id":"k5","name":"คุณภาพเอกสาร","weight":10,"targetValue":5,"unit":"คะแนน"}]`)),
+				CreatedByID: user.ID,
+			},
+			{
+				TenantID: tenantID, Name: "แบบประเมินทีมขาย",
+				DepartmentID: deptMap["ฝ่ายขาย"], Period: "รายไตรมาส",
+				Definition: datatypes.JSON([]byte(`[{"id":"k1","name":"ยอดขายรายไตรมาส","weight":35,"targetValue":3000000,"unit":"บาท"},{"id":"k2","name":"อัตราการรักษาลูกค้า","weight":25,"targetValue":90,"unit":"%"},{"id":"k3","name":"จำนวนลูกค้าใหม่","weight":20,"targetValue":20,"unit":"ราย"},{"id":"k4","name":"ความพึงพอใจลูกค้า","weight":10,"targetValue":90,"unit":"%"},{"id":"k5","name":"การทำงานเป็นทีม","weight":10,"targetValue":5,"unit":"คะแนน"}]`)),
+				CreatedByID: user.ID,
+			},
+		}
 		for i := range templates {
 			templates[i].TenantID = tenant.ID
 			templates[i].CreatedByID = user.ID

@@ -44,9 +44,9 @@ func (r *evaluationRepository) List(ctx context.Context, filter domain.Evaluatio
     }
     
     // Department Join
-    if filter.Department != "" {
+    if filter.DepartmentID != "" {
         query = query.Joins("JOIN employees ON evaluation_results.employee_id::uuid = employees.id").
-                      Where("employees.department = ?", filter.Department)
+                      Where("employees.department_id = ?", filter.DepartmentID)
     }
 
 	err := query.Order("evaluation_results.created_at desc").Find(&results).Error
