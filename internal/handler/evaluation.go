@@ -26,6 +26,7 @@ func (h *EvaluationHandler) List(c *fiber.Ctx) error {
 		SearchQuery:  c.Query("q"),
 		DepartmentID: c.Query("departmentId"),
 		Period:       c.Query("period"),
+		SummaryOnly:  c.Query("summary") == "true",
 	}
 
 	results, err := h.evalUC.ListEvaluations(c.Context(), filter)

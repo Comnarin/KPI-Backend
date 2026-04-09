@@ -48,7 +48,7 @@ type Tenant struct {
 	ID          string               `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
 	Name        string               `gorm:"not null" json:"name"`
 	Code        string               `gorm:"uniqueIndex;not null" json:"code"`
-	Size        string               `gorm:"size:32" json:"size"`     // Small, Medium, Enterprise
+	Size        string               `gorm:"size:32" json:"size"`        // Small, Medium, Enterprise
 	MaxUsers    int                  `gorm:"default:20" json:"maxUsers"` // Configurable user limit per tenant
 	LogoURL     string               `gorm:"size:512" json:"logoUrl"`
 	IsActive    bool                 `gorm:"default:true" json:"isActive"`
@@ -76,13 +76,13 @@ func DefaultMaxUsers(size string) int {
 }
 
 type TenantConfig struct {
-	ID                 string     `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
-	TenantID           string     `gorm:"uniqueIndex;not null" json:"tenantId"`
-	EnableHREval       bool       `gorm:"column:enable_hr_eval;default:false" json:"enableHrEval"`
-	EnableDeptHeadEval bool       `gorm:"column:enable_dept_head_eval;default:false" json:"enableDeptHeadEval"`
-	EnableCEOEval      bool       `gorm:"column:enable_ceo_eval;default:true" json:"enableCeoEval"`
-	CreatedAt          time.Time  `json:"createdAt"`
-	UpdatedAt          time.Time  `json:"updatedAt"`
+	ID                 string    `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
+	TenantID           string    `gorm:"uniqueIndex;not null" json:"tenantId"`
+	EnableHREval       bool      `gorm:"column:enable_hr_eval;default:false" json:"enableHrEval"`
+	EnableDeptHeadEval bool      `gorm:"column:enable_dept_head_eval;default:false" json:"enableDeptHeadEval"`
+	EnableCEOEval      bool      `gorm:"column:enable_ceo_eval;default:true" json:"enableCeoEval"`
+	CreatedAt          time.Time `json:"createdAt"`
+	UpdatedAt          time.Time `json:"updatedAt"`
 }
 
 // EvaluationPeriod represents a scheduled assessment cycle
@@ -185,7 +185,7 @@ type EvaluationTemplate struct {
 	ID           string         `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
 	TenantID     string         `gorm:"index;not null" json:"tenantId"`
 	Name         string         `gorm:"not null" json:"name"`
-	DepartmentID string         `gorm:"type:uuid;index" json:"departmentId"`
+	DepartmentID string         `gorm:"type:uuid;index;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"departmentId"`
 	Department   *Department    `gorm:"foreignKey:DepartmentID" json:"department,omitempty"`
 	Visibility   string         `gorm:"size:32;default:'GENERAL'" json:"visibility"` // PERSONAL | GENERAL
 	Period       string         `gorm:"size:64;default:'รายไตรมาส'" json:"period"`
@@ -204,37 +204,38 @@ const (
 )
 
 type EvaluationFilter struct {
-	TenantID     string
+	TenantID          string
 	ViewerID          string
 	ViewerRole        string
 	SubjectEmployeeID string
 	DepartmentID      string
 	SearchQuery       string
 	Period            string
+	SummaryOnly       bool
 }
 
 type EvaluationResult struct {
-	ID            string           `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
-	TenantID      string           `gorm:"index;not null" json:"tenantId"`
-	EmployeeID    string           `gorm:"type:uuid;not null;index" json:"employeeId"`
-	TemplateID    string           `gorm:"type:uuid;not null" json:"templateId"`
-	EmployeeName  string           `gorm:"size:255" json:"employeeName"`
-	Period        string           `gorm:"not null" json:"period"`
-	PeriodType    string           `gorm:"not null" json:"periodType"`
-	TotalScore    float64          `gorm:"default:0" json:"totalScore"`
-	RatingLevel   string           `gorm:"size:64" json:"ratingLevel"`
-	Notes         string           `gorm:"type:text" json:"notes"`
-	Details       datatypes.JSON   `gorm:"type:jsonb" json:"details"`
-	CurrentStage  *EvaluationStage `gorm:"type:varchar(32)" json:"currentStage"`
-	Completed     bool             `gorm:"default:false" json:"completed"`
+	ID           string           `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
+	TenantID     string           `gorm:"index;not null" json:"tenantId"`
+	EmployeeID   string           `gorm:"type:uuid;not null;index;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT;" json:"employeeId"`
+	TemplateID   string           `gorm:"type:uuid;not null;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"templateId"`
+	EmployeeName string           `gorm:"size:255" json:"employeeName"`
+	Period       string           `gorm:"not null" json:"period"`
+	PeriodType   string           `gorm:"not null" json:"periodType"`
+	TotalScore   float64          `gorm:"default:0" json:"totalScore"`
+	RatingLevel  string           `gorm:"size:64" json:"ratingLevel"`
+	Notes        string           `gorm:"type:text" json:"notes"`
+	Details      datatypes.JSON   `gorm:"type:jsonb" json:"details"`
+	CurrentStage *EvaluationStage `gorm:"type:varchar(32)" json:"currentStage"`
+	Completed    bool             `gorm:"default:false" json:"completed"`
 	// Evaluator attribution
-	EvaluatorID   string           `gorm:"size:128;default:''" json:"evaluatorId"`
-	EvaluatorName string           `gorm:"size:255;default:''" json:"evaluatorName"`
-	EvaluatorRole string           `gorm:"size:32;default:''" json:"evaluatorRole"`
+	EvaluatorID   string `gorm:"type:uuid;index;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"evaluatorId"`
+	EvaluatorName string `gorm:"size:255;default:''" json:"evaluatorName"`
+	EvaluatorRole string `gorm:"size:32;default:''" json:"evaluatorRole"`
 	// Composite index for dashboard recent-evaluations query (tenant + time desc)
-	EvaluatedAt   time.Time        `gorm:"index:idx_eval_tenant_time,priority:2" json:"evaluatedAt"`
-	CreatedAt     time.Time        `gorm:"index:idx_eval_tenant_time,priority:1" json:"createdAt"`
-	UpdatedAt     time.Time        `json:"updatedAt"`
+	EvaluatedAt time.Time `gorm:"index:idx_eval_tenant_time,priority:2" json:"evaluatedAt"`
+	CreatedAt   time.Time `gorm:"index:idx_eval_tenant_time,priority:1" json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 type UserFilter struct {

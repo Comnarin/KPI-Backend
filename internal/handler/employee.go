@@ -63,6 +63,23 @@ func (h *EmployeeHandler) Update(c *fiber.Ctx) error {
 	return c.JSON(emp)
 }
 
+func (h *EmployeeHandler) Patch(c *fiber.Ctx) error {
+	tenantID := tenantFromCtx(c)
+	id := c.Params("id")
+	var body domain.UpdateEmployeeRequest
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid body")
+	}
+	emp, err := h.employeeUC.PartialUpdateEmployee(c.Context(), id, tenantID, body)
+	if err != nil {
+		if err == domain.ErrNotFound {
+			return fiber.NewError(fiber.StatusNotFound, "employee not found")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(emp)
+}
+
 func (h *EmployeeHandler) Delete(c *fiber.Ctx) error {
 	tenantID := tenantFromCtx(c)
 	id := c.Params("id")

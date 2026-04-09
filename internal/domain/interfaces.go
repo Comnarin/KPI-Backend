@@ -29,7 +29,7 @@ type UserRepository interface {
 
 type EvaluationRepository interface {
 	Create(ctx context.Context, evaluation *EvaluationResult) error
-	List(ctx context.Context, filter EvaluationFilter) ([]EvaluationResult, error)
+	List(ctx context.Context, filter EvaluationFilter) ([]EvaluationResponseDTO, error)
 	Delete(ctx context.Context, id string, tenantID string) error
 }
 
@@ -47,6 +47,7 @@ type EmployeeRepository interface {
 	GetByEmail(ctx context.Context, tenantID, email string) (*Employee, error)
 	Create(ctx context.Context, employee *Employee) error
 	Update(ctx context.Context, employee *Employee) error
+	UpdateFields(ctx context.Context, id string, tenantID string, fields map[string]interface{}) error
 	Delete(ctx context.Context, id string, tenantID string) error
 }
 
@@ -82,7 +83,7 @@ type AuthUseCase interface {
 }
 
 type EvaluationUseCase interface {
-	ListEvaluations(ctx context.Context, filter EvaluationFilter) ([]EvaluationResult, error)
+	ListEvaluations(ctx context.Context, filter EvaluationFilter) ([]EvaluationResponseDTO, error)
 	CreateEvaluation(ctx context.Context, tenantID string, req EvaluationResult) (*EvaluationResult, error)
 	DeleteEvaluation(ctx context.Context, id string, tenantID string) error
 }
@@ -131,6 +132,7 @@ type EmployeeUseCase interface {
 	ListEmployees(ctx context.Context, filter EmployeeFilter) ([]Employee, error)
 	CreateEmployee(ctx context.Context, emp Employee) (*Employee, error)
 	UpdateEmployee(ctx context.Context, emp Employee) (*Employee, error)
+	PartialUpdateEmployee(ctx context.Context, id string, tenantID string, req UpdateEmployeeRequest) (*Employee, error)
 	DeleteEmployee(ctx context.Context, id string, tenantID string) error
 }
 

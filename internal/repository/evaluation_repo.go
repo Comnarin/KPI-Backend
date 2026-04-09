@@ -19,9 +19,22 @@ func (r *evaluationRepository) Create(ctx context.Context, evaluation *domain.Ev
 	return r.db.WithContext(ctx).Create(evaluation).Error
 }
 
-func (r *evaluationRepository) List(ctx context.Context, filter domain.EvaluationFilter) ([]domain.EvaluationResult, error) {
-	var results []domain.EvaluationResult
-	query := r.db.WithContext(ctx).Where("evaluation_results.tenant_id = ?", filter.TenantID)
+func (r *evaluationRepository) List(ctx context.Context, filter domain.EvaluationFilter) ([]domain.EvaluationResponseDTO, error) {
+	var results []domain.EvaluationResponseDTO
+	query := r.db.WithContext(ctx).Model(&domain.EvaluationResult{}).Where("evaluation_results.tenant_id = ?", filter.TenantID)
+	if filter.SummaryOnly {
+		query = query.Omit("details")
+	}
+
+	// Always JOIN employee + department to populate virtual fields
+	query = query.
+		Joins("LEFT JOIN employees ON employees.id = evaluation_results.employee_id").
+		Joins("LEFT JOIN departments ON departments.id = employees.department_id").
+		Joins("LEFT JOIN users ON users.id = evaluation_results.evaluator_id").
+		Select(`evaluation_results.*, 
+			COALESCE(employees.first_name || ' ' || employees.last_name, evaluation_results.employee_name) AS employee_name,
+			COALESCE(users.full_name, evaluation_results.evaluator_name) AS evaluator_name,
+			COALESCE(departments.name, '') AS department_name`)
 
 	if filter.ViewerRole == string(domain.RoleSuperAdmin) || filter.ViewerRole == string(domain.RoleCEO) {
 		// CEO and SuperAdmin see all evaluations
@@ -43,13 +56,12 @@ func (r *evaluationRepository) List(ctx context.Context, filter domain.Evaluatio
         query = query.Where("evaluation_results.employee_name ILIKE ? OR evaluation_results.evaluator_name ILIKE ?", q, q)
     }
     
-    // Department Join
+    // Department filter
     if filter.DepartmentID != "" {
-        query = query.Joins("JOIN employees ON evaluation_results.employee_id::uuid = employees.id").
-                      Where("employees.department_id = ?", filter.DepartmentID)
+        query = query.Where("employees.department_id = ?", filter.DepartmentID)
     }
 
-	err := query.Order("evaluation_results.created_at desc").Find(&results).Error
+	err := query.Order("evaluation_results.created_at desc").Scan(&results).Error
 	return results, err
 }
 

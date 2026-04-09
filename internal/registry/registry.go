@@ -37,7 +37,7 @@ func (r *Registry) NewAppHandlers() *handler.Handlers {
 	tenantUC := usecase.NewTenantUseCase(tenantRepo, periodRepo, userRepo, permRepo)
 	empUC := usecase.NewEmployeeUseCase(empRepo)
 	tplUC := usecase.NewTemplateUseCase(tplRepo)
-	deptUC := usecase.NewDepartmentUseCase(deptRepo)
+	deptUC := usecase.NewDepartmentUseCase(deptRepo, empRepo)
 	salaryUC := usecase.NewSalaryFormulaUseCase(salaryRepo)
 	permUC := usecase.NewPermissionUseCase(permRepo)
 	dashUC := usecase.NewDashboardUseCase(dashRepo)

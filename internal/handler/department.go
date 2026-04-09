@@ -64,6 +64,9 @@ func (h *DepartmentHandler) Delete(c *fiber.Ctx) error {
 	tenantID := tenantFromCtx(c)
 	id := c.Params("id")
 	if err := h.deptUC.DeleteDepartment(c.Context(), id, tenantID); err != nil {
+		if err == domain.ErrHasEmployees {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 	return c.SendStatus(fiber.StatusNoContent)

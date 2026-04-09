@@ -6,11 +6,15 @@ import (
 )
 
 type departmentUseCase struct {
-	deptRepo domain.DepartmentRepository
+	deptRepo     domain.DepartmentRepository
+	employeeRepo domain.EmployeeRepository
 }
 
-func NewDepartmentUseCase(deptRepo domain.DepartmentRepository) domain.DepartmentUseCase {
-	return &departmentUseCase{deptRepo: deptRepo}
+func NewDepartmentUseCase(deptRepo domain.DepartmentRepository, employeeRepo domain.EmployeeRepository) domain.DepartmentUseCase {
+	return &departmentUseCase{
+		deptRepo:     deptRepo,
+		employeeRepo: employeeRepo,
+	}
 }
 
 func (u *departmentUseCase) ListDepartments(ctx context.Context, filter domain.DepartmentFilter) ([]domain.Department, error) {
@@ -39,5 +43,14 @@ func (u *departmentUseCase) UpdateDepartment(ctx context.Context, dept domain.De
 }
 
 func (u *departmentUseCase) DeleteDepartment(ctx context.Context, id string, tenantID string) error {
+	// Check if any employees belong to this department
+	emps, err := u.employeeRepo.List(ctx, domain.EmployeeFilter{
+		TenantID:     tenantID,
+		DepartmentID: id,
+	})
+	if err == nil && len(emps) > 0 {
+		return domain.ErrHasEmployees
+	}
+
 	return u.deptRepo.Delete(ctx, id, tenantID)
 }

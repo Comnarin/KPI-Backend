@@ -27,6 +27,7 @@ func (r *dashboardRepository) GetDashboardStats(ctx context.Context, tenantID st
 		RadarData:         []domain.RadarChartData{},
 		RatingDist:        []domain.RatingDistribution{},
 		RecentEvaluations: []domain.RecentEvaluation{},
+		Periods:           []domain.EvaluationPeriod{},
 	}
 
 	// Protect concurrent writes to stats
@@ -188,22 +189,25 @@ func (r *dashboardRepository) GetDashboardStats(ctx context.Context, tenantID st
 	go func() {
 		defer wg.Done()
 		type recentRow struct {
-			ID          string
-			EmployeeID  string
-			FirstName   string
-			LastName    string
-			Position    string
-			TotalScore  int
-			RatingLevel string
-			EvaluatedAt string // formatted from DB
+			ID             string
+			EmployeeID     string
+			FirstName      string
+			LastName       string
+			Position       string
+			DepartmentName string
+			TotalScore     int
+			RatingLevel    string
+			EvaluatedAt    string // formatted from DB
 		}
 		var rows []recentRow
 		query := r.db.WithContext(ctx).
 			Table("evaluation_results ev").
 			Select(`ev.id, ev.employee_id, e.first_name, e.last_name, e.position,
+				COALESCE(d.name, '') AS department_name,
 				ev.total_score, ev.rating_level,
 				TO_CHAR(ev.evaluated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS evaluated_at`).
 			Joins("JOIN employees e ON ev.employee_id = e.id").
+			Joins("LEFT JOIN departments d ON d.id = e.department_id").
 			Where("ev.tenant_id = ?", tenantID)
 
 		if period != "" {
@@ -217,14 +221,15 @@ func (r *dashboardRepository) GetDashboardStats(ctx context.Context, tenantID st
 		recents := make([]domain.RecentEvaluation, 0, len(rows))
 		for _, rr := range rows {
 			recents = append(recents, domain.RecentEvaluation{
-				ID:          rr.ID,
-				EmployeeID:  rr.EmployeeID,
-				FirstName:   rr.FirstName,
-				LastName:    rr.LastName,
-				Position:    rr.Position,
-				TotalScore:  rr.TotalScore,
-				RatingLevel: rr.RatingLevel,
-				EvaluatedAt: rr.EvaluatedAt,
+				ID:             rr.ID,
+				EmployeeID:     rr.EmployeeID,
+				FirstName:      rr.FirstName,
+				LastName:       rr.LastName,
+				Position:       rr.Position,
+				DepartmentName: rr.DepartmentName,
+				TotalScore:     rr.TotalScore,
+				RatingLevel:    rr.RatingLevel,
+				EvaluatedAt:    rr.EvaluatedAt,
 			})
 		}
 		mu.Lock()
@@ -250,6 +255,23 @@ func (r *dashboardRepository) GetDashboardStats(ctx context.Context, tenantID st
 		err := query.Select("COALESCE(SUM(recommended_salary - current_salary), 0)").Scan(&totalIncrease).Error
 		mu.Lock()
 		stats.TotalSalaryBudget = totalIncrease
+		mu.Unlock()
+		addErr(err)
+	}()
+
+	// ── 8. Periods (for dropdown filter) ─────────────────────────────────────
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var periods []domain.EvaluationPeriod
+		err := r.db.WithContext(ctx).
+			Where("tenant_id = ?", tenantID).
+			Order("created_at DESC").
+			Find(&periods).Error
+		mu.Lock()
+		if periods != nil {
+			stats.Periods = periods
+		}
 		mu.Unlock()
 		addErr(err)
 	}()

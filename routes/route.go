@@ -19,6 +19,7 @@ func RegisterRoutes(app *fiber.App, handlers *handler.Handlers) {
 	// Employees
 	protected.Get("/employees", handlers.Employee.List)
 	protected.Post("/employees", handlers.Employee.Create)
+	protected.Patch("/employees/:id", handlers.Employee.Patch)
 	protected.Put("/employees/:id", handlers.Employee.Update)
 	protected.Delete("/employees/:id", handlers.Employee.Delete)
 

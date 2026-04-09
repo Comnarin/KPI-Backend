@@ -31,7 +31,7 @@ func (u *employeeUseCase) UpdateEmployee(ctx context.Context, emp domain.Employe
 	}
 	existing.FirstName = emp.FirstName
 	existing.LastName = emp.LastName
-	existing.Department = emp.Department
+	existing.DepartmentID = emp.DepartmentID
 	existing.Position = emp.Position
 	existing.BaseSalary = emp.BaseSalary
 	existing.PersonalCapacity = emp.PersonalCapacity
@@ -44,6 +44,55 @@ func (u *employeeUseCase) UpdateEmployee(ctx context.Context, emp domain.Employe
 		return nil, err
 	}
 	return existing, nil
+}
+
+func (u *employeeUseCase) PartialUpdateEmployee(ctx context.Context, id string, tenantID string, req domain.UpdateEmployeeRequest) (*domain.Employee, error) {
+	fields := make(map[string]interface{})
+	if req.FirstName != nil {
+		fields["first_name"] = *req.FirstName
+	}
+	if req.LastName != nil {
+		fields["last_name"] = *req.LastName
+	}
+	if req.Email != nil {
+		fields["email"] = *req.Email
+	}
+	if req.DepartmentID != nil {
+		fields["department_id"] = *req.DepartmentID
+	}
+	if req.Position != nil {
+		fields["position"] = *req.Position
+	}
+	if req.BaseSalary != nil {
+		fields["base_salary"] = *req.BaseSalary
+	}
+	if req.PersonalCapacity != nil {
+		fields["personal_capacity"] = *req.PersonalCapacity
+	}
+	if req.VariablePayBase != nil {
+		fields["variable_pay_base"] = *req.VariablePayBase
+	}
+	if req.Code != nil {
+		fields["code"] = *req.Code
+	}
+	if req.Status != nil {
+		fields["status"] = *req.Status
+	}
+	if req.YearsOfService != nil {
+		fields["years_of_service"] = *req.YearsOfService
+	}
+	if req.StartDate != nil {
+		fields["start_date"] = *req.StartDate
+	}
+
+	if len(fields) == 0 {
+		return u.employeeRepo.GetByID(ctx, id)
+	}
+
+	if err := u.employeeRepo.UpdateFields(ctx, id, tenantID, fields); err != nil {
+		return nil, err
+	}
+	return u.employeeRepo.GetByID(ctx, id)
 }
 
 func (u *employeeUseCase) DeleteEmployee(ctx context.Context, id string, tenantID string) error {

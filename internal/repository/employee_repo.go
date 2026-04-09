@@ -48,7 +48,7 @@ func (r *employeeRepository) List(ctx context.Context, filter domain.EmployeeFil
 
 func (r *employeeRepository) GetByID(ctx context.Context, id string) (*domain.Employee, error) {
 	var result domain.Employee
-	err := r.db.WithContext(ctx).First(&result, "id = ?", id).Error
+	err := r.db.WithContext(ctx).Preload("Department").First(&result, "id = ?", id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (r *employeeRepository) GetByID(ctx context.Context, id string) (*domain.Em
 
 func (r *employeeRepository) GetByEmail(ctx context.Context, tenantID, email string) (*domain.Employee, error) {
 	var emp domain.Employee
-	err := r.db.WithContext(ctx).Where("tenant_id = ? AND email = ?", tenantID, email).First(&emp).Error
+	err := r.db.WithContext(ctx).Preload("Department").Where("tenant_id = ? AND email = ?", tenantID, email).First(&emp).Error
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +70,12 @@ func (r *employeeRepository) Create(ctx context.Context, emp *domain.Employee) e
 
 func (r *employeeRepository) Update(ctx context.Context, emp *domain.Employee) error {
 	return r.db.WithContext(ctx).Save(emp).Error
+}
+
+func (r *employeeRepository) UpdateFields(ctx context.Context, id string, tenantID string, fields map[string]interface{}) error {
+	return r.db.WithContext(ctx).Model(&domain.Employee{}).
+		Where("id = ? AND tenant_id = ?", id, tenantID).
+		Updates(fields).Error
 }
 
 func (r *employeeRepository) Delete(ctx context.Context, id string, tenantID string) error {

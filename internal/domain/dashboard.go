@@ -8,14 +8,15 @@ type RatingDistribution struct {
 }
 
 type RecentEvaluation struct {
-	ID          string `json:"id"`
-	EmployeeID  string `json:"employeeId"`
-	FirstName   string `json:"firstName"`
-	LastName    string `json:"lastName"`
-	Position    string `json:"position"`
-	TotalScore  int    `json:"totalScore"`
-	RatingLevel string `json:"ratingLevel"`
-	EvaluatedAt string `json:"evaluatedAt"`
+	ID             string `json:"id"`
+	EmployeeID     string `json:"employeeId"`
+	FirstName      string `json:"firstName"`
+	LastName       string `json:"lastName"`
+	Position       string `json:"position"`
+	DepartmentName string `json:"departmentName"`
+	TotalScore     int    `json:"totalScore"`
+	RatingLevel    string `json:"ratingLevel"`
+	EvaluatedAt    string `json:"evaluatedAt"`
 }
 
 type BarChartData struct {
@@ -37,6 +38,8 @@ type DashboardStats struct {
 	RadarData         []RadarChartData     `json:"radarData"`
 	RatingDist        []RatingDistribution `json:"ratingDist"`
 	RecentEvaluations []RecentEvaluation   `json:"recentEvaluations"`
+	// Periods included so the dashboard page doesn't need a separate /periods call
+	Periods           []EvaluationPeriod   `json:"periods"`
 }
 
 type DashboardRepository interface {

@@ -79,7 +79,7 @@ func (u *evaluationUseCase) CreateEvaluation(ctx context.Context, tenantID strin
 	return &req, nil
 }
 
-func (u *evaluationUseCase) ListEvaluations(ctx context.Context, filter domain.EvaluationFilter) ([]domain.EvaluationResult, error) {
+func (u *evaluationUseCase) ListEvaluations(ctx context.Context, filter domain.EvaluationFilter) ([]domain.EvaluationResponseDTO, error) {
 	if filter.ViewerRole == string(domain.RoleEmployee) {
 		user, err := u.userRepo.GetByID(ctx, filter.ViewerID)
 		if err == nil {
@@ -87,10 +87,10 @@ func (u *evaluationUseCase) ListEvaluations(ctx context.Context, filter domain.E
 			if empErr == nil {
 				filter.SubjectEmployeeID = emp.ID
 			} else {
-				return []domain.EvaluationResult{}, nil
+				return []domain.EvaluationResponseDTO{}, nil
 			}
 		} else {
-			return []domain.EvaluationResult{}, nil
+			return []domain.EvaluationResponseDTO{}, nil
 		}
 	}
 	return u.evalRepo.List(ctx, filter)
