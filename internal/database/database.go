@@ -40,54 +40,9 @@ func ConnectAndMigrate() *gorm.DB {
 		log.Printf("Warning: failed to seed data: %v", err)
 	}
 
-	runDataMigrations(db)
-
 	return db
 }
 
-func runDataMigrations(db *gorm.DB) {
-	log.Println("Running data migrations for departments...")
-	
-	// 1. Migrate employees: map old 'department' string to 'department_id'
-	// We use raw SQL because the 'department' field was removed from the domain struct
-	err := db.Exec(`
-		UPDATE employees e
-		SET department_id = d.id
-		FROM departments d
-		WHERE d.tenant_id = e.tenant_id 
-		  AND d.name = e.department 
-		  AND (e.department_id IS NULL OR e.department_id::text = '')
-	`).Error
-	if err != nil {
-		log.Printf("Warning: failed to migrate employee department IDs: %v", err)
-	}
-
-	// 2. Migrate evaluation_templates
-	err = db.Exec(`
-		UPDATE evaluation_templates t
-		SET department_id = d.id
-		FROM departments d
-		WHERE d.tenant_id = t.tenant_id 
-		  AND d.name = t.department 
-		  AND (t.department_id IS NULL OR t.department_id::text = '')
-	`).Error
-	if err != nil {
-		log.Printf("Warning: failed to migrate template department IDs: %v", err)
-	}
-
-	// 3. Cleanup redundant columns
-	log.Println("Cleaning up redundant columns...")
-	if db.Migrator().HasColumn(&domain.Employee{}, "department") {
-		if err := db.Migrator().DropColumn(&domain.Employee{}, "department"); err != nil {
-			log.Printf("Warning: failed to drop redundant department column from employees: %v", err)
-		}
-	}
-	if db.Migrator().HasColumn(&domain.EvaluationTemplate{}, "department") {
-		if err := db.Migrator().DropColumn(&domain.EvaluationTemplate{}, "department"); err != nil {
-			log.Printf("Warning: failed to drop redundant department column from evaluation_templates: %v", err)
-		}
-	}
-}
 
 func seedData(db *gorm.DB) error {
 	// 1. Ensure System Tenant exists
